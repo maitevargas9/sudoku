@@ -7,11 +7,26 @@ import {
     computeConflicts
 } from "../logic/sudoku";
 
-export default function SudokuBoard() {
-    const [grid, setGrid] = useState<Grid>(() => emptyGrid());
-    const [selected, setSelected] = useState<{ r: number; c: number } | null>(
-        null
-    );
+interface SudokuBoardProps {
+    initialGrid?: Grid;
+    solvedGrid?: Grid;
+}
+
+export default function SudokuBoard({ initialGrid, solvedGrid }: SudokuBoardProps) {
+    const [grid, setGrid] = useState<Grid>(() => initialGrid ?? emptyGrid());
+    const [selected, setSelected] = useState<{ r: number; c: number } | null>(null);
+
+    useEffect(() => {
+        if (initialGrid) {
+            setGrid(initialGrid);
+        }
+    }, [initialGrid]);
+
+    useEffect(() => {
+        if (solvedGrid) {
+            setGrid(solvedGrid);
+        }
+    }, [solvedGrid]);
 
     const conflicts = useMemo(() => computeConflicts(grid), [grid]);
 
