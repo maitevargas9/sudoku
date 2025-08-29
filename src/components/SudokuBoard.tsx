@@ -1,9 +1,10 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import type { CellValue, Grid } from "../logic/sudoku";
 import {
     emptyGrid,
     inBounds,
-    cloneGrid
+    cloneGrid,
+    computeConflicts
 } from "../logic/sudoku";
 
 export default function SudokuBoard() {
@@ -11,6 +12,8 @@ export default function SudokuBoard() {
     const [selected, setSelected] = useState<{ r: number; c: number } | null>(
         null
     );
+
+    const conflicts = useMemo(() => computeConflicts(grid), [grid]);
 
     const selectCell = (r: number, c: number) => setSelected({ r, c });
 
@@ -81,7 +84,9 @@ export default function SudokuBoard() {
                 {Array.from({ length: 81 }).map((_, idx) => {
                     const r = Math.floor(idx / 9);
                     const c = idx % 9;
+
                     const isSelected = selected && selected.r === r && selected.c === c;
+                    const isConflict = conflicts[r][c];
 
                     const thickTop = r % 3 === 0 ? "border-t-4" : "border-t";
                     const thickLeft = c % 3 === 0 ? "border-l-4" : "border-l";
@@ -93,10 +98,11 @@ export default function SudokuBoard() {
                             key={`${r}-${c}`}
                             onClick={() => selectCell(r, c)}
                             className={`
-                                flex items-center justify-center bg-white cursor-pointer
+                                flex items-center justify-center cursor-pointer
                                 border-slate-700
                                 ${thickTop} ${thickLeft} ${thickRight} ${thickBottom}
-                                ${isSelected ? "bg-yellow-100" : ""}
+                                ${isSelected ? "bg-yellow-100" : "bg-white"}
+                                ${isConflict ? "text-red-600 font-bold" : ""}
                                 aspect-square
                             `}
                         >
