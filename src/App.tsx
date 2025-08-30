@@ -6,24 +6,20 @@ import SudokuBoard from "./components/SudokuBoard";
 
 export default function App() {
   const [grid, setGrid] = useState<Grid>(generateSudoku());
-  const [solvedGrid, setSolvedGrid] = useState<Grid | undefined>();
   const [selected, setSelected] = useState<{ r: number; c: number } | null>(null);
 
   const handleReset = () => {
     setGrid(emptyGrid());
-    setSolvedGrid(undefined);
   };
 
   const handleNewSudoku = () => {
-    const newPuzzle = generateSudoku();
-    setGrid(newPuzzle);
-    setSolvedGrid(undefined);
+    setGrid(generateSudoku());
   };
 
   const handleSolve = () => {
     const clone = cloneGrid(grid);
     if (solveSudoku(clone)) {
-      setSolvedGrid(clone);
+      setGrid(clone);
     } else {
       alert("This Sudoku has no solution!!");
     }
@@ -68,8 +64,8 @@ export default function App() {
       />
       <div className="w-full max-w-[28rem] mt-16">
         <SudokuBoard
-          initialGrid={grid}
-          solvedGrid={solvedGrid}
+          grid={grid}
+          onChange={setGrid}
           onSelect={(r, c) => setSelected({ r, c })}
         />
       </div>

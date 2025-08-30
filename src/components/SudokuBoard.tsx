@@ -1,50 +1,36 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
 import type { CellValue, Grid } from "../logic/sudoku";
 import {
-    emptyGrid,
     inBounds,
     cloneGrid,
     computeConflicts
 } from "../logic/sudoku";
 
 interface SudokuBoardProps {
-    initialGrid?: Grid;
-    solvedGrid?: Grid;
+    grid: Grid;
+    onChange: (g: Grid) => void;
     onSelect?: (r: number, c: number) => void;
 }
 
-export default function SudokuBoard({ initialGrid, solvedGrid, onSelect }: SudokuBoardProps) {
-    const [grid, setGrid] = useState<Grid>(() => initialGrid ?? emptyGrid());
+export default function SudokuBoard({ grid, onChange, onSelect }: SudokuBoardProps) {
     const [selected, setSelected] = useState<{ r: number; c: number } | null>(null);
-
-    useEffect(() => {
-        if (initialGrid) {
-            setGrid(initialGrid);
-        }
-    }, [initialGrid]);
-
-    useEffect(() => {
-        if (solvedGrid) {
-            setGrid(solvedGrid);
-        }
-    }, [solvedGrid]);
 
     const conflicts = useMemo(() => computeConflicts(grid), [grid]);
 
     const selectCell = (r: number, c: number) => {
         setSelected({ r, c });
-        if (onSelect) onSelect(r, c);
+        if (onSelect) {
+            onSelect(r, c);
+        }
     };
 
     const setCell = useCallback(
         (r: number, c: number, val: CellValue) => {
-            setGrid((prev) => {
-                const next = cloneGrid(prev);
-                next[r][c] = val;
-                return next;
-            });
+            const next = cloneGrid(grid);
+            next[r][c] = val;
+            onChange(next);
         },
-        []
+        [grid, onChange]
     );
 
     const onKey = useCallback(
@@ -71,25 +57,25 @@ export default function SudokuBoard({ initialGrid, solvedGrid, onSelect }: Sudok
             if (e.key === "ArrowUp") {
                 nr = r - 1;
             }
-            else if (e.key === "ArrowDown") {
+            if (e.key === "ArrowDown") {
                 nr = r + 1;
             }
-            else if (e.key === "ArrowLeft") {
+            if (e.key === "ArrowLeft") {
                 nc = c - 1;
             }
-            else if (e.key === "ArrowRight") {
+            if (e.key === "ArrowRight") {
                 nc = c + 1;
             }
 
-            if (
-                ["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight"].includes(e.key) &&
-                inBounds(nr, nc)
-            ) {
+            if (["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight"].includes(e.key) && inBounds(nr, nc)) {
                 setSelected({ r: nr, c: nc });
+                if (onSelect) {
+                    onSelect(nr, nc);
+                }
                 e.preventDefault();
             }
         },
-        [selected, setCell]
+        [selected, setCell, onSelect]
     );
 
     useEffect(() => {
@@ -103,7 +89,6 @@ export default function SudokuBoard({ initialGrid, solvedGrid, onSelect }: Sudok
                 {Array.from({ length: 81 }).map((_, idx) => {
                     const r = Math.floor(idx / 9);
                     const c = idx % 9;
-
                     const isSelected = selected && selected.r === r && selected.c === c;
                     const isConflict = conflicts[r][c];
 
@@ -116,14 +101,8 @@ export default function SudokuBoard({ initialGrid, solvedGrid, onSelect }: Sudok
                         <div
                             key={`${r}-${c}`}
                             onClick={() => selectCell(r, c)}
-                            className={`
-                                flex items-center justify-center cursor-pointer
-                                border-slate-700
-                                ${thickTop} ${thickLeft} ${thickRight} ${thickBottom}
-                                ${isSelected ? "bg-yellow-100" : "bg-white"}
-                                ${isConflict ? "text-red-600 font-bold" : ""}
-                                aspect-square
-                            `}
+                            className={`flex items-center justify-center cursor-pointer border-slate-700 ${thickTop} ${thickLeft} ${thickRight} ${thickBottom} ${isSelected ? "bg-yellow-100" : "bg-white"
+                                } ${isConflict ? "text-red-600 font-bold" : ""} aspect-square`}
                         >
                             {grid[r][c] ?? ""}
                         </div>
