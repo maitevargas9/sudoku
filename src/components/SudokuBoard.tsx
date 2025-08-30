@@ -10,9 +10,10 @@ import {
 interface SudokuBoardProps {
     initialGrid?: Grid;
     solvedGrid?: Grid;
+    onSelect?: (r: number, c: number) => void;
 }
 
-export default function SudokuBoard({ initialGrid, solvedGrid }: SudokuBoardProps) {
+export default function SudokuBoard({ initialGrid, solvedGrid, onSelect }: SudokuBoardProps) {
     const [grid, setGrid] = useState<Grid>(() => initialGrid ?? emptyGrid());
     const [selected, setSelected] = useState<{ r: number; c: number } | null>(null);
 
@@ -30,7 +31,10 @@ export default function SudokuBoard({ initialGrid, solvedGrid }: SudokuBoardProp
 
     const conflicts = useMemo(() => computeConflicts(grid), [grid]);
 
-    const selectCell = (r: number, c: number) => setSelected({ r, c });
+    const selectCell = (r: number, c: number) => {
+        setSelected({ r, c });
+        if (onSelect) onSelect(r, c);
+    };
 
     const setCell = useCallback(
         (r: number, c: number, val: CellValue) => {
